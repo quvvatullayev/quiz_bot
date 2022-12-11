@@ -2,16 +2,40 @@ from telegram.ext import Updater,MessageHandler,Filters,CallbackContext,CommandH
 from telegram import Update,ReplyKeyboardMarkup,KeyboardButton,InlineKeyboardButton,InlineKeyboardMarkup
 import requests
 import json
-
+import pprint
 TOKEN = '5677023630:AAGdskZAvZwdRix213Ho28QaN-NZVcQtuU8'
+b_url = 'http://127.0.0.1:8000'
 class Quiz_bot:
-    t = 0
-    f = 0
+    true = 0
+    false = 0
     def start(self, update:Update, context:CallbackContext):
         id = update.message.from_user.id
-        url = 'http://127.0.0.1:8000/quiz_list/'
+        url = f'{b_url}/quiz_list/'
         rq = requests.get(url)
         data_json = rq.json()
+
+        url2 = f'{b_url}/users_list/'
+        r2 = requests.get(url2)
+        data_user = r2.json()
+
+        first_name = update.message.from_user.first_name
+        if not first_name:
+            first_name = "Null"
+        last_name = update.message.from_user.last_name
+        if not last_name:
+            last_name = 'Null'
+        email = f"Null@gmial.com"
+        password = update.message.from_user.id
+
+        data = {'ferst_name':first_name, 'last_name':last_name, "email":email, 'password':password}
+
+        list_pass = []
+        for i in data_user["user_listis"]:
+            list_pass.append(i["password"])
+        if str(password) not in list_pass:
+                url = f"{b_url}/create_user/"
+                r = requests.post(url, json=data)
+                r.json()
 
         inline_key = []
         for i in data_json:
@@ -22,7 +46,7 @@ class Quiz_bot:
     
     def quer_start(self, update:Update, context:CallbackContext):
         quer = update.callback_query
-        url = 'http://127.0.0.1:8000/quiz_list/'
+        url = f'{b_url}/quiz_list/'
         rq = requests.get(url)
         data_json = rq.json()
 
@@ -37,12 +61,12 @@ class Quiz_bot:
     def topic(self, update:Update, context:CallbackContext):
         quer = update.callback_query
         pk = quer.data[1:]
-        url = f'http://127.0.0.1:8000/topic_list/{pk}/'
+        url = f'{b_url}/topic_list/{pk}/'
         rq = requests.get(url)
         data_json = rq.json()
 
         inline_key = []
-        for i in data_json['topic']:
+        for i in data_json['quiz']["topics"]:
             ed = i['id']
             inline_key.append([InlineKeyboardButton(i['t_name'], callback_data=f'🥈{ed}')])
         inline_key.append([InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')])
@@ -54,47 +78,74 @@ class Quiz_bot:
         quer = update.callback_query
         quer.edit_message_text("📌Savvollar:", reply_markup=None)
         pk = quer.data[1:]
-        url1 = f'http://127.0.0.1:8000/question_list/{pk}/'
+        url1 = f'{b_url}/question_list/{pk}/'
         rq = requests.get(url1)
         data_quitoin:dict = rq.json()
 
-        for k,v in data_quitoin.items():
-            if k == 'question':
-                for q in v:
-                    pk = q['id']
-                    url2 = f'http://127.0.0.1:8000/option_list/{pk}/'
-                    rq = requests.get(url2)
-                    data_opition = rq.json()
-                    inline_key = []
-                    n = 1
-                    for e in data_opition['option']:
-                        o_id = e['is_right']
-                        inline_key.append([InlineKeyboardButton(f"{n}) " + e['option'], callback_data=f'❔{o_id}')])
-                        n += 1
-                    reply_markup = InlineKeyboardMarkup(inline_key)
-                    updater.bot.sendMessage(quer.message.chat.id, q["quetion"]+"❔", reply_markup=reply_markup)
-        reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅tugatush', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+        for questions in data_quitoin['topic']['questions']:
+            inline_key = []
+            t_id = questions["topic_id"]
+            
+            for optons in questions["optons"]:
+                q_id = optons["quetion"]
+                o_id = optons['id']
+                inline_key.append([InlineKeyboardButton(optons["option"], callback_data=f'❔{t_id}{q_id}{o_id}')])
+            reply_markup = InlineKeyboardMarkup(inline_key)
+            updater.bot.sendMessage(quer.message.chat.id, questions["question"]+" ❔", reply_markup=reply_markup)
+        reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
         updater.bot.sendMessage(quer.message.chat.id,'yo\'nalish',reply_markup=reply_markup)
 
     def statest(self, update:Update, context:CallbackContext):
         quir = update.callback_query
-        if quir.data[1:] == 'True':
-            self.t += 1
-        elif quir.data[1:] == 'False':
-            self.f += 1
+        data = quir.data
+        t_id = data[1]
+        q_id = data[2]
+        o_id = data[-1]
+        url = f'{b_url}/question_list/{t_id}/'
+        r = requests.get(url)
+        r_json = r.json()
+
+        url2 = f'{b_url}/users_list/'
+        r2 = requests.get(url2)
+        data_user = r2.json()
+
+        for i in data_user["user_listis"]:
+            if i['password'] == str(quir.message.chat.id):
+                user_id = i['id']
+        topisc_id = r_json['topic']['id']
+        question_id = data[-1]
+
+        data3 = {"user_id":user_id,"quiz_title":question_id, 'topic_name':topisc_id}
+        url3 = f"{b_url}/create_result/"
+        r3 = requests.post(url3, json=data3)
+
+        result_id = r3.json()['id']
+
+        url5 = f"{b_url}/option_chict/{o_id}/"
+        r5 = requests.get(url5)
+        o_chict = r5.json()['chict']
+
+        url4 = f'{b_url}/create_result_detail/'
+        r4 = requests.post(url4, json={"user":user_id, "result":result_id, "question_name":q_id, "is_solved":o_chict})
+        r4_json = r4.json()
+        r_detail_id = r4_json['result']
+
+        url6 = f"{b_url}/chict_all/{user_id}/{r_detail_id}"
+        r6 = requests.get(url6)
+        r6_json = r6.json()
+        self.true += r6_json['True']
+        self.false += r6_json['False']
+
         quir.edit_message_reply_markup(reply_markup=None)
 
     def stop(self, update:Update, context:CallbackContext):
         quir = update.callback_query
         quir.edit_message_text(f'statestika:', reply_markup=None)
-        updater.bot.sendMessage(quir.message.chat.id, f"to\'g\'ri:{self.t}/ xato:{self.f}")
+        updater.bot.sendMessage(quir.message.chat.id, f"to'gri:{self.true} / xato:{self.false}")
         reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️boshminu', callback_data='⬅️ortga')]])
         updater.bot.sendMessage(quir.message.chat.id,"👇bosh minu👇",reply_markup=reply_markup)
-        self.f = 0
-        self.t = 0
-
-        
-
+        self.true = 0
+        self.false = 0
 
 updater = Updater(TOKEN)
 bot_quiz = Quiz_bot()
