@@ -8,6 +8,7 @@ b_url = 'http://127.0.0.1:8000'
 class Quiz_bot:
     true = 0
     false = 0
+    question_list_index = []
     def start(self, update:Update, context:CallbackContext):
         id = update.message.from_user.id
         url = f'{b_url}/quiz_list/'
@@ -82,18 +83,51 @@ class Quiz_bot:
         rq = requests.get(url1)
         data_quitoin:dict = rq.json()
 
-        for questions in data_quitoin['topic']['questions']:
+        self.question_list_index = data_quitoin['topic']['question_index_list']
+
+        if len(self.question_list_index) > 0:
             inline_key = []
-            t_id = questions["topic_id"]
-            
-            for optons in questions["optons"]:
-                q_id = optons["quetion"]
-                o_id = optons['id']
-                inline_key.append([InlineKeyboardButton(optons["option"], callback_data=f'❔{t_id}{q_id}{o_id}')])
+            for optons in data_quitoin['topic']['questions'][self.question_list_index[0]]["optons"]:
+                    q_id = optons["quetion"]
+                    o_id = optons['id']
+                    t_id = data_quitoin['topic']['questions'][self.question_list_index[0]]['topic_id']
+                    inline_key.append([InlineKeyboardButton(optons["option"], callback_data=f'❔{t_id}{q_id}{o_id}', callback_game='self.quiston1')])
             reply_markup = InlineKeyboardMarkup(inline_key)
-            updater.bot.sendMessage(quer.message.chat.id, questions["question"]+" ❔", reply_markup=reply_markup)
-        reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
-        updater.bot.sendMessage(quer.message.chat.id,'yo\'nalish',reply_markup=reply_markup)
+            updater.bot.sendMessage(quer.message.chat.id, data_quitoin['topic']['questions'][self.question_list_index[0]]['question']+" ❔", reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩{pk}') ,InlineKeyboardButton('✅testni tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
+            if len(self.question_list_index) > 0:
+                self.question_list_index.pop(0)
+        else:
+            updater.bot.sendMessage(quer.message.chat.id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
+
+    def quiston1(self, update:Update, context:CallbackContext):
+        quer = update.callback_query
+        quer.edit_message_text("📌Savvollar:", reply_markup=None)
+        pk = quer.data[1:]
+        url1 = f'{b_url}/question_list/{pk}/'
+        rq = requests.get(url1)
+        data_quitoin:dict = rq.json()
+
+        if len(self.question_list_index) > 0:
+            inline_key = []
+            for optons in data_quitoin['topic']['questions'][self.question_list_index[0]]["optons"]:
+                    q_id = optons["quetion"]
+                    o_id = optons['id']
+                    t_id = data_quitoin['topic']['questions'][self.question_list_index[0]]['topic_id']
+                    inline_key.append([InlineKeyboardButton(optons["option"], callback_data=f'❔{t_id}{q_id}{o_id}')])
+            reply_markup = InlineKeyboardMarkup(inline_key)
+            updater.bot.sendMessage(quer.message.chat.id ,data_quitoin['topic']['questions'][self.question_list_index[0]]['question']+" ❔", reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩{pk}') ,InlineKeyboardButton('✅testni tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
+            if len(self.question_list_index) > 0:
+                self.question_list_index.pop(0)
+        else:
+            updater.bot.sendMessage(quer.message.chat.id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data='✅'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
 
     def statest(self, update:Update, context:CallbackContext):
         quir = update.callback_query
@@ -155,6 +189,7 @@ updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quer_start, pattern
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.topic, pattern='🥈⬅️ortga', ))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.topic, pattern='🥇'))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quitoin, pattern="🥈"))
+updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quiston1, pattern="⏩"))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.statest, pattern='❔'))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.stop, pattern="✅"))
 
