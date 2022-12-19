@@ -90,6 +90,8 @@ class Quiz_bot:
 
         url_result = f"{b_url}/api/result/"
         r = requests.post(url_result, json={"student":user_id, "topic":pk, "score":0})
+        print(r)
+        r_id = r.json()['id']
 
 
         self.question_list_index = data_quitoin['quiz']['topic']["questions_index"]
@@ -102,13 +104,13 @@ class Quiz_bot:
             for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
-                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id}")])
+                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id}")])
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
             text = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["title"]
             updater.bot.sendPhoto(quer.message.chat.id ,img, text, reply_markup = reply_markup)
             
-            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩{pk}') ,InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩ {pk} {r_id}') ,InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
             updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
 
             if len(self.question_list_index) > 0:
@@ -121,7 +123,8 @@ class Quiz_bot:
     def quiston1(self, update:Update, context:CallbackContext):
         quer = update.callback_query
         quer.edit_message_text("📌Savvollar:", reply_markup=None)
-        pk = quer.data[1:]
+        pk = quer.data.split()[1]
+        r_id = quer.data.split()[2]
         url1 = f'{b_url}/api/question/{pk}/'
         rq = requests.get(url1)
         data_quitoin = rq.json()
@@ -138,13 +141,13 @@ class Quiz_bot:
             for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
-                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id}")])
+                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id}")])
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
             text = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["title"]
             updater.bot.sendPhoto(quer.message.chat.id ,img, text, reply_markup = reply_markup)
             
-            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩{pk}') ,InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⏩kiying test', callback_data=f'⏩ {pk} {r_id}') ,InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
             updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
 
             if len(self.question_list_index) > 0:
@@ -158,10 +161,12 @@ class Quiz_bot:
         quer = update.callback_query        
         q_id = quer.data.split()[1]
         o_id = quer.data.split()[2]
+        r_id = quer.data.split()[3]
         url = f"{b_url}/api/result_detail/"
         """xato bajardim vaqtinchalik result:1 dib"""
-        r = requests.post(url=url, json={"result":1, "question":q_id, "option":o_id})
-        data = r.json()
+        r = requests.post(url=url, json={"result":r_id, "question":q_id, "option":o_id})
+        print(r_id)
+        print(r.status_code)
         # updater.bot.sendMessage(quer.message.chat.id, str(data["is_correct"]))
         quer.edit_message_caption(caption='Ok')
 
