@@ -97,7 +97,6 @@ class Quiz_bot:
 
         if len(self.question_list_index) > 0:
             img = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["img"]
-
             
             inline_key = []
             for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
@@ -127,7 +126,6 @@ class Quiz_bot:
 
         if len(self.question_list_index) > 0:
             img = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["img"]
-
             
             inline_key = []
             for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
