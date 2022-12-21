@@ -70,16 +70,30 @@ class Quiz_bot:
         inline_key = []
         for i in data_json['quiz']["topics"]:
             ed = i['id']
-            inline_key.append([InlineKeyboardButton(i['title'], callback_data=f'🥈{ed}')])
+            inline_key.append([InlineKeyboardButton(i['title'], callback_data=f'📌🥈 {ed}')])
         inline_key.append([InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')])
         reply_markup = InlineKeyboardMarkup(inline_key)
         quer.edit_message_text("Mavzular ro'yxati:", reply_markup=None)
         quer.edit_message_reply_markup(reply_markup=reply_markup)
 
+    def border(self, update:Update, context:CallbackContext):
+        quer = update.callback_query
+        data =quer.data.split()
+        topic_id = data[1]
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton('5 ta', callback_data=f'🥈 {topic_id} {5}'), InlineKeyboardButton('10 ta', callback_data=f'🥈 {topic_id} {10}')],
+            [InlineKeyboardButton('15 ta', callback_data=f'🥈 {topic_id} {15}'), InlineKeyboardButton('20 ta', callback_data=f'🥈 {topic_id} {20}')],
+            [InlineKeyboardButton('25 ta', callback_data=f'🥈 {topic_id} {25}'), InlineKeyboardButton('30 ta', callback_data=f'🥈 {topic_id} {30}')],
+            [InlineKeyboardButton('40 ta', callback_data=f'🥈 {topic_id} {40}'), InlineKeyboardButton('50 ta', callback_data=f'🥈 {topic_id} {50}')]
+            ])
+        quer.edit_message_text("Nechta test yechmoqchisiz:", reply_markup=reply_markup)
+
     def quitoin(self, update:Update, context:CallbackContext):
         quer = update.callback_query
         quer.edit_message_text("📌Savvollar:", reply_markup=None)
-        pk = quer.data[1:]
+        data = quer.data.split()
+        pk = data[1]
+        n = int(data[2])
         url1 = f'{b_url}/api/question/{pk}/'
         rq = requests.get(url1)
         data_quitoin = rq.json()
@@ -92,7 +106,7 @@ class Quiz_bot:
         r = requests.post(url_result, json={"student":user_id, "topic":pk, "score":0})
         r_id = r.json()['id']
 
-        list_data = data_quitoin['quiz']['topic']["questions_index"][:5]
+        list_data = data_quitoin['quiz']['topic']["questions_index"][:n]
         self.question_list_index = list_data
 
         if len(self.question_list_index) > 0:
@@ -183,6 +197,7 @@ updater.dispatcher.add_handler(CommandHandler('quiz', bot_quiz.quiz))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quer_start, pattern='⬅️ortga', ))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.topic, pattern='🥈⬅️ortga', ))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.topic, pattern='🥇'))
+updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.border, pattern="📌🥈"))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quitoin, pattern="🥈"))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.quiston1, pattern="⏩"))
 updater.dispatcher.add_handler(CallbackQueryHandler(bot_quiz.add_option, pattern="❔"))
