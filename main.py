@@ -6,11 +6,6 @@ import pprint
 TOKEN = '5677023630:AAGdskZAvZwdRix213Ho28QaN-NZVcQtuU8'
 b_url = 'http://127.0.0.1:8000'
 class Quiz_bot:
-    true = 0
-    false = 0
-    """xato bajardim vaqtinchalik question_list_index ni argumint deb"""
-    question_list_index = []
-
     def start(self, update:Update, context:CallbackContext):
         id = update.message.from_user.id
         updater.bot.sendMessage(id, 'Hush kelibsiz')
@@ -28,7 +23,7 @@ class Quiz_bot:
         username = update.message.from_user.username
         if username == None:
             username = None
-        json_data = {'first_name': first_name, 'last_name': last_name, 'telegram_id': telegram_id, 'username': username}
+        json_data = {'first_name': first_name, 'last_name': last_name, 'telegram_id': telegram_id, 'username': username, "question_list":[]}
         
         r_post = requests.post(url=url, json=json_data)
 
@@ -106,24 +101,28 @@ class Quiz_bot:
         r = requests.post(url_result, json={"student":user_id, "topic":pk, "score":0})
         r_id = r.json()['id']
 
-        list_data = data_quitoin['quiz']['topic']["questions_index"][:n]
-        self.question_list_index = list_data
+        url_update_student = f"{b_url}/api/updeteStudent/{user_id}"
+        r_update_student = requests.post(url_update_student, json={"question_list":data_quitoin['quiz']['topic']["questions_index"][:n]})
+        list_data = r_update_student.json()['question_list']
 
-        if len(self.question_list_index) > 0:
-            img = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["img"]
+        if len(list_data) > 0:
+            img = data_quitoin['quiz']['topic']['questions'][list_data[0]]["img"]
             
             inline_key = []
-            for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
+            for optons in data_quitoin['quiz']['topic']['questions'][list_data[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
                     inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}")])
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
-            text = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["title"]
+            text = data_quitoin['quiz']['topic']['questions'][list_data[0]]["title"]
             updater.bot.sendPhoto(quer.message.chat.id ,img, text, reply_markup = reply_markup)
 
-            if len(self.question_list_index) > 0:
-                self.question_list_index.pop(0)
+            if len(list_data) > 0:
+                list_data.pop(0)
+                url_update_student = f"{b_url}/api/updeteStudent/{user_id}"
+                r_update_student = requests.post(url_update_student, json={"question_list":list_data})
+        
         else:
             updater.bot.sendMessage(quer.message.chat.id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
             reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
@@ -137,22 +136,25 @@ class Quiz_bot:
         url_student = f"{b_url}/api/student/{id}/"
         r_user = requests.get(url_student)
         user_id = r_user.json()['id']
+        question_list = r_user.json()["question_list"]
 
-        if len(self.question_list_index) > 0:
-            img = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["img"]
+        if len(question_list) > 0:
+            img = data_quitoin['quiz']['topic']['questions'][question_list[0]]["img"]
             
             inline_key = []
-            for optons in data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["options"]:
+            for optons in data_quitoin['quiz']['topic']['questions'][question_list[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
                     inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}")])
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
-            text = data_quitoin['quiz']['topic']['questions'][self.question_list_index[0]]["title"]
+            text = data_quitoin['quiz']['topic']['questions'][question_list[0]]["title"]
             updater.bot.sendPhoto(id ,img, text, reply_markup = reply_markup)
 
-            if len(self.question_list_index) > 0:
-                self.question_list_index.pop(0)
+            if len(question_list) > 0:
+                question_list.pop(0)
+                url_update_student = f"{b_url}/api/updeteStudent/{user_id}"
+                r_update_student = requests.post(url_update_student, json={"question_list":question_list})
         else:
             updater.bot.sendMessage(id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
             reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
@@ -171,10 +173,11 @@ class Quiz_bot:
         url2 = f"{b_url}/api/result_detail/{data['option']}/"
         r2 = requests.get(url2)
         data2 = r2.json()
+        quer.edit_message_caption('javob qabul qilindi✅', reply_markup=None)
         if data2["is_correct"] == False:
-            quer.edit_message_caption(caption="❌❌" + str(data2["is_correct"]) + "❌❌")
+            quer.answer("❌❌ afsuskiy bu savolga notog'ri \njavob berdingiz" + str(data2["is_correct"]) + "❌❌", show_alert=True)
         if data2["is_correct"] == True:
-            quer.edit_message_caption(caption="✅✅" + str(data2["is_correct"]) + "✅✅")
+            quer.answer("✅✅ tabriklayman bu savolga tog'ri \njavob berdingiz" + str(data2["is_correct"]) + "✅✅", show_alert=True)
 
         self.quiston1(update, context, pk, r_id, quer.message.chat.id)
 
