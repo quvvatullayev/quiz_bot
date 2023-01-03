@@ -6,6 +6,8 @@ import pprint
 TOKEN = '5677023630:AAGdskZAvZwdRix213Ho28QaN-NZVcQtuU8'
 b_url = 'http://127.0.0.1:8000'
 class Quiz_bot:
+    a = 0
+
     def start(self, update:Update, context:CallbackContext):
         id = update.message.from_user.id
         updater.bot.sendMessage(id, 'Hush kelibsiz')
@@ -124,9 +126,8 @@ class Quiz_bot:
                 r_update_student = requests.post(url_update_student, json={"question_list":list_data})
         
         else:
-            updater.bot.sendMessage(quer.message.chat.id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
-            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
-            updater.bot.sendMessage(quer.message.chat.id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('ha', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton("yo'q", callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(quer.message.chat.id,'Bu mavzu bo\'yicha savollarimiz tugadi.\n✅test natijalarini ko\'rasizmi?',reply_markup=reply_markup)
 
     def quiston1(self, update:Update, context:CallbackContext, pk, r_id, id):
         url1 = f'{b_url}/api/question/{pk}/'
@@ -156,9 +157,8 @@ class Quiz_bot:
                 url_update_student = f"{b_url}/api/updeteStudent/{user_id}"
                 r_update_student = requests.post(url_update_student, json={"question_list":question_list})
         else:
-            updater.bot.sendMessage(id, 'Bu mavzu bo\'yicha savollarimiz tugadi.')
-            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('✅testni tugatish', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('⬅️ortga', callback_data='⬅️ortga')]])
-            updater.bot.sendMessage(id,'Yo\'nalishni tanlang',reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('ha', callback_data=f'✅ {pk} {user_id}'), InlineKeyboardButton('yo\'q', callback_data='⬅️ortga')]])
+            updater.bot.sendMessage(id,'Bu mavzu bo\'yicha savollarimiz tugadi.\n✅test natijalarini ko\'rasizmi?',reply_markup=reply_markup)
 
     def add_option(self, update:Update, context:CallbackContext):
         quer = update.callback_query        
@@ -167,7 +167,6 @@ class Quiz_bot:
         r_id = quer.data.split()[3]
         pk = quer.data.split()[4]
         url = f"{b_url}/api/result_detail/"
-        """xato bajardim vaqtinchalik result:1 dib"""
         r = requests.post(url=url, json={"result":r_id, "question":q_id, "option":o_id})
         data = r.json()
         url2 = f"{b_url}/api/result_detail/{data['option']}/"
@@ -177,6 +176,7 @@ class Quiz_bot:
         if data2["is_correct"] == False:
             quer.answer("❌❌ afsuskiy bu savolga notog'ri \njavob berdingiz" + str(data2["is_correct"]) + "❌❌", show_alert=True)
         if data2["is_correct"] == True:
+            self.a += 1
             quer.answer("✅✅ tabriklayman bu savolga tog'ri \njavob berdingiz" + str(data2["is_correct"]) + "✅✅", show_alert=True)
 
         self.quiston1(update, context, pk, r_id, quer.message.chat.id)
@@ -189,8 +189,9 @@ class Quiz_bot:
         url = f"{b_url}/api/result/{s_id}/{t_id}"
         r = requests.get(url)
         data = r.json()
-        text = f"✅ to'g'ri javoblar soni " + str(data['student']["results"][0]["score"])
+        text = f"✅ to'g'ri javoblar soni:{self.a}\nShu mavzu bo'yicha umumiy to'g'rijavoblar\nsoni : " + str(data['student']["results"][0]["score"])
         quer.edit_message_text(text, reply_markup=None)
+        self.a = 0
 
 updater = Updater(TOKEN)
 bot_quiz = Quiz_bot()
