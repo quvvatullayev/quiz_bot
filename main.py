@@ -3,6 +3,7 @@ from telegram import Update,ReplyKeyboardMarkup,KeyboardButton,InlineKeyboardBut
 import requests
 import json
 import pprint
+from random import randint
 TOKEN = '5677023630:AAGdskZAvZwdRix213Ho28QaN-NZVcQtuU8'
 b_url = 'http://127.0.0.1:8000'
 class Quiz_bot:
@@ -104,7 +105,10 @@ class Quiz_bot:
         r_id = r.json()['id']
 
         url_update_student = f"{b_url}/api/updeteStudent/{user_id}"
-        r_update_student = requests.post(url_update_student, json={"question_list":data_quitoin['quiz']['topic']["questions_index"][:n]})
+        random_list = []
+        for i in range(n):
+            random_list.append(randint(data_quitoin['quiz']['topic']["questions_index"][0], data_quitoin['quiz']['topic']["questions_index"][-1]))
+        r_update_student = requests.post(url_update_student, json={"question_list":random_list})
         list_data = r_update_student.json()['question_list']
 
         if len(list_data) > 0:
