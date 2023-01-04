@@ -114,11 +114,11 @@ class Quiz_bot:
         if len(list_data) > 0:
             img = data_quitoin['quiz']['topic']['questions'][list_data[0]]["img"]
             
-            inline_key = []
+            inline_key = [[]]
             for optons in data_quitoin['quiz']['topic']['questions'][list_data[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
-                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}")])
+                    inline_key[0].append(InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}"))
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
             text = data_quitoin['quiz']['topic']['questions'][list_data[0]]["title"]
@@ -146,11 +146,11 @@ class Quiz_bot:
         if len(question_list) > 0:
             img = data_quitoin['quiz']['topic']['questions'][question_list[0]]["img"]
             
-            inline_key = []
+            inline_key = [[]]
             for optons in data_quitoin['quiz']['topic']['questions'][question_list[0]]["options"]:
                     q_id = optons["question"]
                     o_id = optons['id']
-                    inline_key.append([InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}")])
+                    inline_key[0].append(InlineKeyboardButton(optons["title"], callback_data=f"❔ {q_id} {o_id} {r_id} {pk}"))
                     
             reply_markup = InlineKeyboardMarkup(inline_key)
             text = data_quitoin['quiz']['topic']['questions'][question_list[0]]["title"]
