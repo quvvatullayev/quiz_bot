@@ -5,7 +5,7 @@ import json
 import pprint
 from random import randint
 TOKEN = '5677023630:AAGdskZAvZwdRix213Ho28QaN-NZVcQtuU8'
-b_url = 'http://127.0.0.1:8000'
+b_url = 'https://quvvatullayevogabek.pythonanywhere.com'
 class Quiz_bot:
     a = 0
 
