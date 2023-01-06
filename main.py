@@ -26,6 +26,7 @@ class Quiz_bot:
         username = update.message.from_user.username
         if username == None:
             username = None
+
         json_data = {'first_name': first_name, 'last_name': last_name, 'telegram_id': telegram_id, 'username': username, "question_list":[]}
         
         r_post = requests.post(url=url, json=json_data)
